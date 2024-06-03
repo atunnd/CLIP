@@ -1,18 +1,30 @@
+import os
+import faiss
 import torch
-
-import fiftyone.zoo as foz
+import skimage
+import requests
+import pinecone
+import numpy as np
+import pandas as pd
+from PIL import Image
+from io import BytesIO
+import IPython.display
+import matplotlib.pyplot as plt
+from datasets import load_dataset
+from collections import OrderedDict
+from transformers import CLIPProcessor, CLIPModel, CLIPTokenizer
 
 from pkg_resources import packaging
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-
-if packaging.version.parse(torch.__version__) < packaging.version.parse("1.8.0"):
-    dtype = torch.long
-else:
-    dtype = torch.int
-
-# load CLIP model from FiftyOne Model Zoo
-model = foz.load_zoo_model("clip-vit-base32-torch")
+# Define the model ID
+model_ID = "openai/clip-vit-base-patch32"
+# Save the model to device
+model = CLIPModel.from_pretrained(model_ID).to(device)
+# Get the processor
+processor = CLIPProcessor.from_pretrained(model_ID)
+# Get the tokenizer
+tokenizer = CLIPTokenizer.from_pretrained(model_ID)
 
 
 def get_text_embedding(prompt, clip_model=model) -> list:
